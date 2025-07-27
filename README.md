@@ -72,3 +72,5 @@ In this case, `messages.po` in the `fr` folder will be translated to French, `es
 - You can use any model compatible with your setup, not just `qwen3:30b`.
 
 ---
+
+Thanks for checking out the tool! If it’s useful to you, a wishlist for my game would be hugely appreciated: https://store.steampowered.com/app/3890110?utm_source=github
