@@ -36,7 +36,7 @@ If you want to run models locally with **Ollama**:
 
 1. Visit [https://ollama.com](https://ollama.com)
 2. Follow the instructions to install and run a model locally
-3. After your model is running (locally or remotely), and you've set `apiUrl` and `model` in the config, you can move on to the usage section
+3. After your model is running (locally or remotely), and you've set `apiUrl` and `model` in the POTranslator.h, you can move on to the usage section
 
 ---
 
