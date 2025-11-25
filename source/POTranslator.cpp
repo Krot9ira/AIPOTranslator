@@ -79,7 +79,8 @@ std::string POTranslator::Translate(const std::string& text) {
         catch (const std::exception& ex)
         {
             std::cerr << "Error while parsing: " << ex.what() << std::endl;
-            return "";
+            curl_easy_cleanup(curl);
+            throw ex;
         }
         
 
@@ -125,19 +126,20 @@ std::string POTranslator::Translate(const std::string& text) {
                 }
                 else
                 {
-                    return "";
+                    std::cerr << "No translated field" << std::endl;
+                    throw std::runtime_error("No translated field");
                 }
             }
             catch (const std::exception& ex)
             {
                 std::cerr << "Error while parsing: " << ex.what() << std::endl;
-                return "";
+                throw ex;
             }
 
         }
         else {
             std::cerr << "No 'response' field" << std::endl;
-            return "";
+            throw std::runtime_error("No 'response' field");
         }
     }
 
@@ -149,28 +151,36 @@ std::string POTranslator::StartTranslate(const std::string& input) {
     {
         return input;
     }
-#if PRINT_EACH_LINE_TRANSLATION
-    std::cout << "translating new line..." << std::endl;
-#endif
-    std::vector<std::string> subStrings;
-	SplitString(input, subStrings);
-    std::string result;
-    for (size_t i = 0; i < subStrings.size(); i++)
+    try
     {
-        result.append(Translate(subStrings[i]));
-        if (i != subStrings.size() - 1)
+#if PRINT_EACH_LINE_TRANSLATION
+        std::cout << "translating new line..." << std::endl;
+#endif
+        std::vector<std::string> subStrings;
+        SplitString(input, subStrings);
+        std::string result;
+        for (size_t i = 0; i < subStrings.size(); i++)
         {
-            result.append("\\r\\n");
+            result.append(Translate(subStrings[i]));
+            if (i != subStrings.size() - 1)
+            {
+                result.append("\\r\\n");
+            }
         }
-    }
-    if (result.empty())
-    {
-        result = input;
-    }
+        if (result.empty())
+        {
+            result = input;
+        }
 #if PRINT_EACH_LINE_TRANSLATION
-    std::cout << "End translating line..." << std::endl;
+        std::cout << "End translating line..." << std::endl;
 #endif
-    return result;
+        return result;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "Exception while translating field " << input << "will be empty. Error:" << ex.what() << std::endl;
+        return "";
+    }
 }
 
 
