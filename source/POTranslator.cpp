@@ -178,7 +178,7 @@ std::string POTranslator::StartTranslate(const std::string& input) {
     }
     catch (const std::exception& ex)
     {
-        std::cerr << "Exception while translating field " << input << "will be empty. Error:" << ex.what() << std::endl;
+        std::cerr << "Exception while translating field: " << std::endl << input << std::endl << "will be empty" << std::endl << "Error:" << ex.what() << std::endl;
         return "";
     }
 }
