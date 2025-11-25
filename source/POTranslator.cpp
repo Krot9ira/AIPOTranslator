@@ -10,6 +10,8 @@
 
 using json = nlohmann::json;
 
+#define PRINT_EACH_LINE_TRANSLATION 0
+
 POTranslator::POTranslator(std::string language_)
 {
     language = language_;
@@ -47,7 +49,7 @@ std::string POTranslator::Translate(const std::string& text) {
 
     std::ostringstream ossBody;
 	// Constructing the JSON body for the request for more information go to Ollama API documentation
-    ossBody << "{\"model\": \"" << model << "\", \"prompt\": \"" << prompt << "\", \"think\": "<< (think ? "true" : "false") << ", \"stream\": " << (stream ? "true" : "false") << ", \"format\": \"" << format << "\"}";
+    ossBody << "{\"model\": \"" << model << "\", \"prompt\": \"" << prompt << "\", \"think\": "<< (think ? "true" : "false") << ", \"stream\": " << (stream ? "true" : "false") << ", \"format\": \"" << format << "\", \"keep_alive\": \"5m\"}";
     std::string body = ossBody.str();
 
     // Requesting translate and check response for translation
@@ -82,25 +84,33 @@ std::string POTranslator::Translate(const std::string& text) {
             json finalmgstr = json::parse(pojson);
             if (finalmgstr.contains("msgstr")) {
                 std::string translatedText = finalmgstr["msgstr"];
+#if PRINT_EACH_LINE_TRANSLATION
                 std::cout << translatedText << "  ==  " << text << std::endl;
+#endif
                 return translatedText;
             }
             else if (finalmgstr.contains("translated"))
             {
                 std::string translatedText = finalmgstr["translated"];
+#if PRINT_EACH_LINE_TRANSLATION
                 std::cout << translatedText << "  ==  " << text << std::endl;
+#endif
                 return translatedText;
             }
             else if (finalmgstr.contains("translation"))
             {
                 std::string translatedText = finalmgstr["translation"];
+#if PRINT_EACH_LINE_TRANSLATION
                 std::cout << translatedText << "  ==  " << text << std::endl;
+#endif
                 return translatedText;
             }
             else if (finalmgstr.contains("translated_string"))
             {
                 std::string translatedText = finalmgstr["translated_string"];
+#if PRINT_EACH_LINE_TRANSLATION
                 std::cout << translatedText << "  ==  " << text << std::endl;
+#endif
                 return translatedText;
             }
             else
@@ -122,7 +132,9 @@ std::string POTranslator::StartTranslate(const std::string& input) {
     {
         return input;
     }
+#if PRINT_EACH_LINE_TRANSLATION
     std::cout << "translating new line..." << std::endl;
+#endif
     std::vector<std::string> subStrings;
 	SplitString(input, subStrings);
     std::string result;
@@ -138,7 +150,9 @@ std::string POTranslator::StartTranslate(const std::string& input) {
     {
         result = input;
     }
+#if PRINT_EACH_LINE_TRANSLATION
     std::cout << "End translating line..." << std::endl;
+#endif
     return result;
 }
 

@@ -19,6 +19,6 @@ private:
 
     const std::string apiUrl = "http://localhost:11434/api/generate";
 
-    const std::string model = "qwen3:30b";
+    const std::string model = "qwen3:30b"; //if you want more accurate use - qwen3:32b-q8_0
 
 };

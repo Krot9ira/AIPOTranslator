@@ -1,4 +1,4 @@
-//All rights reserved by Daniil Grigoriev.
+﻿//All rights reserved by Daniil Grigoriev.
 
 #include "POTranlator.h"
 #include <iostream>
@@ -7,6 +7,7 @@
 #include <curl\curl.h>
 #include "nlohmann\json.hpp"
 #include <Shlobj.h>
+#include <chrono>
 #include "Utility.h"
 
 using json = nlohmann::json;
@@ -14,11 +15,10 @@ using namespace std::filesystem;
 
 //For curl response
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
-    if (userp == nullptr) {
-        return 0;
-    }
-    userp->reserve(size * nmemb);
-    userp->append((char*)contents, size * nmemb);
+    if (!userp) return 0;
+
+    userp->append(static_cast<char*>(contents), size * nmemb);
+
     return size * nmemb;
 }
 
@@ -37,9 +37,19 @@ void SplitString(const std::string& input, std::vector<std::string>& subStrings)
 }
 
 void TranslatePO(const path& sourceFile, const path& sourceRoot) {
+#pragma region Line_Counting
 
+    std::ifstream counter(sourceFile);
+    size_t totalLines = 0;
+    std::string tmp;
+    while (std::getline(counter, tmp)) totalLines++;
+    counter.close();
 
-
+    if (totalLines == 0) {
+        std::cerr << "File is empty or cannot count lines." << std::endl;
+        return;
+    }
+#pragma endregion
     path sourceDir = sourceFile.parent_path();
 
 
@@ -82,7 +92,40 @@ void TranslatePO(const path& sourceFile, const path& sourceRoot) {
 	std::vector<std::string> msgstrs;
     bool inMsgid = false, inMsgstr = false;
 
+    size_t processedLines = 0;
+    auto startTime = std::chrono::steady_clock::now();
     while (std::getline(input, line)) {
+#pragma region Progress_Bar
+        processedLines++;
+        int percent = (processedLines * 100) / totalLines;
+#pragma region ETA_Calculation
+        auto now = std::chrono::steady_clock::now();
+        double elapsedSec = std::chrono::duration<double>(now - startTime).count();
+
+        double etaSec = 0.0;
+        if (processedLines > 0) {
+            etaSec = elapsedSec * (double(totalLines) / processedLines - 1.0);
+        }
+
+        int etaMinutes = int(etaSec) / 60;
+        int etaSeconds = int(etaSec) % 60;
+#pragma endregion
+        int barWidth = 40;
+        int filled = (percent * barWidth) / 100;
+
+        std::cout << "\r[";
+        for (int i = 0; i < filled; i++) std::cout << "#";
+        for (int i = filled; i < barWidth; i++) std::cout << "-";
+        std::cout << "] " << percent << "% ("
+            << processedLines << "/" << totalLines << ")";
+
+        if (etaMinutes > 0)
+            std::cout << "  ETA: " << etaMinutes << "m " << etaSeconds << "s   ";
+        else
+            std::cout << "  ETA: " << etaSeconds << "s   ";
+
+        std::cout.flush();
+#pragma endregion progress bar
         if (line.rfind("msgid ", 0) == 0) {
             msgid = line.substr(6);
             msgid = msgid.substr(1, msgid.length() - 2);  // Delete quotes
@@ -105,7 +148,7 @@ void TranslatePO(const path& sourceFile, const path& sourceRoot) {
             output << line << std::endl;
         }
     }
-
+    std::cout << std::endl;
     input.close();
     output.close();
 }
