@@ -71,9 +71,17 @@ std::string POTranslator::Translate(const std::string& text) {
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
             return "";
         }
-
-
-        json response_json = json::parse(readBuffer);
+        json response_json;
+        try
+        {
+            response_json = json::parse(readBuffer);
+        }
+        catch (const std::exception& ex)
+        {
+            std::cerr << "Error while parsing: " << ex.what() << std::endl;
+            return "";
+        }
+        
 
 
         curl_easy_cleanup(curl);
@@ -81,42 +89,51 @@ std::string POTranslator::Translate(const std::string& text) {
 
         if (response_json.contains("response")) {
             std::string pojson = response_json["response"];
-            json finalmgstr = json::parse(pojson);
-            if (finalmgstr.contains("msgstr")) {
-                std::string translatedText = finalmgstr["msgstr"];
-#if PRINT_EACH_LINE_TRANSLATION
-                std::cout << translatedText << "  ==  " << text << std::endl;
-#endif
-                return translatedText;
-            }
-            else if (finalmgstr.contains("translated"))
+            try
             {
-                std::string translatedText = finalmgstr["translated"];
+                json finalmgstr = json::parse(pojson);
+                if (finalmgstr.contains("msgstr")) {
+                    std::string translatedText = finalmgstr["msgstr"];
 #if PRINT_EACH_LINE_TRANSLATION
-                std::cout << translatedText << "  ==  " << text << std::endl;
+                    std::cout << translatedText << "  ==  " << text << std::endl;
 #endif
-                return translatedText;
-            }
-            else if (finalmgstr.contains("translation"))
-            {
-                std::string translatedText = finalmgstr["translation"];
+                    return translatedText;
+                }
+                else if (finalmgstr.contains("translated"))
+                {
+                    std::string translatedText = finalmgstr["translated"];
 #if PRINT_EACH_LINE_TRANSLATION
-                std::cout << translatedText << "  ==  " << text << std::endl;
+                    std::cout << translatedText << "  ==  " << text << std::endl;
 #endif
-                return translatedText;
-            }
-            else if (finalmgstr.contains("translated_string"))
-            {
-                std::string translatedText = finalmgstr["translated_string"];
+                    return translatedText;
+                }
+                else if (finalmgstr.contains("translation"))
+                {
+                    std::string translatedText = finalmgstr["translation"];
 #if PRINT_EACH_LINE_TRANSLATION
-                std::cout << translatedText << "  ==  " << text << std::endl;
+                    std::cout << translatedText << "  ==  " << text << std::endl;
 #endif
-                return translatedText;
+                    return translatedText;
+                }
+                else if (finalmgstr.contains("translated_string"))
+                {
+                    std::string translatedText = finalmgstr["translated_string"];
+#if PRINT_EACH_LINE_TRANSLATION
+                    std::cout << translatedText << "  ==  " << text << std::endl;
+#endif
+                    return translatedText;
+                }
+                else
+                {
+                    return "";
+                }
             }
-            else
+            catch (const std::exception& ex)
             {
+                std::cerr << "Error while parsing: " << ex.what() << std::endl;
                 return "";
             }
+
         }
         else {
             std::cerr << "No 'response' field" << std::endl;
