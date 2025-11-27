@@ -36,7 +36,7 @@ std::string POTranslator::Translate(const std::string& text) {
     prompt.append("'");
     prompt.append(text);
     prompt.append("'");
-    prompt.append(". Respond using ONLY JSON");
+    prompt.append(".Respond using ONLY JSON with the key 'msgstr' or 'translation' containing the translated text. ");
 
 
     
@@ -63,6 +63,7 @@ std::string POTranslator::Translate(const std::string& text) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 180L);
 
         res = curl_easy_perform(curl);
 
@@ -114,7 +115,8 @@ std::string POTranslator::Translate(const std::string& text) {
                     "translation_output", "TRANSLATION_OUTPUT",
                     "value", "VALUE",
                     "data", "DATA",
-                    "content", "CONTENT"
+                    "content", "CONTENT",
+                    "string"
                 };
 
                 for (const auto& key : translationKeys) {
