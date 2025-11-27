@@ -19,6 +19,6 @@ private:
 
     const std::string apiUrl = "http://localhost:11434/api/generate";
 
-    const std::string model = "qwen3:30b"; //if you want more accurate use - qwen3:32b-q8_0
+    const std::string model = "qwen3:30b"; //for european cultures same results with higher speed give gpt-oss:20b
 
 };

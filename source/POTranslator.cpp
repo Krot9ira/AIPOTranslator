@@ -30,13 +30,13 @@ std::string POTranslator::Translate(const std::string& text) {
     std::string readBuffer;
 
     std::ostringstream ossPrompt;
-    ossPrompt << "Please translate the following string from.po file to " << language << " while preserving the format, maintaining all special characters and formatting as required for a valid.po file entry.";
+    ossPrompt << "You are a professional game localizer.Please translate the following string from.po file to " << language << " while preserving the format, maintaining all special characters and formatting as required for a valid.po file entry. Do not output errors or explanations.";
     std::string prompt = ossPrompt.str();
 
     prompt.append("'");
     prompt.append(text);
     prompt.append("'");
-    prompt.append(". Respond using JSON");
+    prompt.append(". Respond using ONLY JSON");
 
 
     
@@ -93,42 +93,42 @@ std::string POTranslator::Translate(const std::string& text) {
             try
             {
                 json finalmgstr = json::parse(pojson);
-                if (finalmgstr.contains("msgstr")) {
-                    std::string translatedText = finalmgstr["msgstr"];
+                static const std::vector<std::string> translationKeys = {
+                    "msgstr", "MSGSTR",
+                    "translated", "TRANSLATED",
+                    "translation", "TRANSLATION",
+                    "translated_string", "TRANSLATED_STRING",
+                    "text", "TEXT",
+                    "result", "RESULT",
+                    "output", "OUTPUT",
+                    "translated_text", "TRANSLATED_TEXT",
+                    "translatedContent", "TRANSLATEDCONTENT",
+                    "translatedText", "TRANSLATEDTEXT",
+                    "translation_text", "TRANSLATION_TEXT",
+                    "translationResult", "TRANSLATIONRESULT",
+                    "translation_result", "TRANSLATION_RESULT",
+                    "final_translation", "FINAL_TRANSLATION",
+                    "finalTranslation", "FINALTRANSLATION",
+                    "response", "RESPONSE",
+                    "translationOutput", "TRANSLATIONOUTPUT",
+                    "translation_output", "TRANSLATION_OUTPUT",
+                    "value", "VALUE",
+                    "data", "DATA",
+                    "content", "CONTENT"
+                };
+
+                for (const auto& key : translationKeys) {
+                    if (finalmgstr.contains(key)) {
+                        std::string translatedText = finalmgstr[key];
 #if PRINT_EACH_LINE_TRANSLATION
-                    std::cout << translatedText << "  ==  " << text << std::endl;
+                        std::cout << translatedText << "  ==  " << text << std::endl;
 #endif
-                    return translatedText;
+                        return translatedText;
+                    }
                 }
-                else if (finalmgstr.contains("translated"))
-                {
-                    std::string translatedText = finalmgstr["translated"];
-#if PRINT_EACH_LINE_TRANSLATION
-                    std::cout << translatedText << "  ==  " << text << std::endl;
-#endif
-                    return translatedText;
-                }
-                else if (finalmgstr.contains("translation"))
-                {
-                    std::string translatedText = finalmgstr["translation"];
-#if PRINT_EACH_LINE_TRANSLATION
-                    std::cout << translatedText << "  ==  " << text << std::endl;
-#endif
-                    return translatedText;
-                }
-                else if (finalmgstr.contains("translated_string"))
-                {
-                    std::string translatedText = finalmgstr["translated_string"];
-#if PRINT_EACH_LINE_TRANSLATION
-                    std::cout << translatedText << "  ==  " << text << std::endl;
-#endif
-                    return translatedText;
-                }
-                else
-                {
-                    std::cerr << "No translated field" << std::endl;
-                    throw std::runtime_error("No translated field");
-                }
+
+                std::cerr << "No translated field. finalmgstr: " << finalmgstr << std::endl;
+                throw std::runtime_error("No translated field");
             }
             catch (const std::exception& ex)
             {
