@@ -1,7 +1,7 @@
 # AIPOTranslator
 
 **AIPOTranslator** is a tool for translating `.PO` files using AI models.  
-It has been tested with the `qwen3:30b` model running locally through [Ollama](https://ollama.com) on a system with:
+It has been tested with the `qwen3:30b-instruct` model running locally through [Ollama](https://ollama.com) on a system with:
 
 - GPU: RTX 3080 Ti (12 GB VRAM)  
 - RAM: 48 GB  
@@ -36,7 +36,7 @@ git clone https://github.com/microsoft/vcpkg
 You can change translation settings in `POTranslator.h`:
 
 - `apiUrl` — Default is `localhost`. Change it to your server's URL if needed.
-- `model` — Default is `qwen3:30b`. You can replace this with any compatible model name.
+- `model` — Default is `qwen3:30b-instruct`. You can replace this with any compatible model name.
 
 ---
 
@@ -79,7 +79,7 @@ In this case, `messages.po` in the `fr` folder will be translated to French, `es
 ## 💬 Notes
 
 - Make sure your model is running and accessible via the `apiUrl` before starting translation.
-- You can use any model compatible with your setup, not just `qwen3:30b`.
+- You can use any model compatible with your setup, not just `qwen3:30b-instruct`.
 
 ---
 
