@@ -36,9 +36,9 @@ void SplitString(const std::string& input, std::vector<std::string>& subStrings)
     subStrings.push_back(input.substr(start));
 }
 
-void TranslatePO(const path& sourceFile, const path& sourceRoot) {
+void TranslatePO(const path& sourceFile, const path& sourceRoot, bool overwriteOriginal)
+{
 #pragma region Line_Counting
-
     std::ifstream counter(sourceFile);
     size_t totalLines = 0;
     std::string tmp;
@@ -50,34 +50,25 @@ void TranslatePO(const path& sourceFile, const path& sourceRoot) {
         return;
     }
 #pragma endregion
-    path sourceDir = sourceFile.parent_path();
 
+    path sourceDir = sourceFile.parent_path();
 
     std::string stem = sourceFile.stem().string();
     std::string ext = sourceFile.extension().string();
-    path translatedFileName = stem + "_Translated" + ext;
 
-
-    path outputPath = sourceDir / translatedFileName;
+    path outputPath;
+    if (overwriteOriginal) {
+        outputPath = sourceDir / (stem + "_tmpTranslated" + ext);
+    }
+    else {
+        outputPath = sourceDir / (stem + "_Translated" + ext);
+    }
 
     std::ifstream input(sourceFile);
     std::ofstream output(outputPath);
 
-
-
-
     if (!input) {
         std::cerr << "Failed to open input file." << std::endl;
-
-        if (input.bad()) {
-            std::cerr << "Fatal error: badbit is set." << std::endl;
-        }
-
-        if (input.fail()) {
-            char buff[256];
-            std::cerr << "Error details: " << strerror_s(buff, 100, 0) << buff
-                << std::endl;
-        }
         return;
     }
 
@@ -85,31 +76,29 @@ void TranslatePO(const path& sourceFile, const path& sourceRoot) {
         std::cerr << "Failed to open output file." << std::endl;
         return;
     }
+
     std::string language = sourceFile.parent_path().filename().string();
     POTranslator tranlator(language);
 
     std::string line, msgid, msgstr;
-	std::vector<std::string> msgstrs;
     bool inMsgid = false, inMsgstr = false;
 
     size_t processedLines = 0;
     auto startTime = std::chrono::steady_clock::now();
+
     while (std::getline(input, line)) {
-#pragma region Progress_Bar
+
+
         processedLines++;
         int percent = (processedLines * 100) / totalLines;
-#pragma region ETA_Calculation
+
         auto now = std::chrono::steady_clock::now();
         double elapsedSec = std::chrono::duration<double>(now - startTime).count();
-
-        double etaSec = 0.0;
-        if (processedLines > 0) {
-            etaSec = elapsedSec * (double(totalLines) / processedLines - 1.0);
-        }
+        double etaSec = (processedLines > 0 ? elapsedSec * (double(totalLines) / processedLines - 1.0) : 0.0);
 
         int etaMinutes = int(etaSec) / 60;
         int etaSeconds = int(etaSec) % 60;
-#pragma endregion
+
         int barWidth = 40;
         int filled = (percent * barWidth) / 100;
 
@@ -125,32 +114,45 @@ void TranslatePO(const path& sourceFile, const path& sourceRoot) {
             std::cout << "  ETA: " << etaSeconds << "s   ";
 
         std::cout.flush();
-#pragma endregion progress bar
+
         if (line.rfind("msgid ", 0) == 0) {
             msgid = line.substr(6);
-            msgid = msgid.substr(1, msgid.length() - 2);  // Delete quotes
-            output << "msgid \"" << msgid << "\"" << std::endl;
+            msgid = msgid.substr(1, msgid.length() - 2);
+            output << "msgid \"" << msgid << "\"\n";
             inMsgid = true;
             inMsgstr = false;
         }
         else if (line.rfind("msgstr ", 0) == 0 && inMsgid) {
             msgstr = line.substr(7);
-            msgstr = msgstr.substr(1, msgstr.length() - 2);  // Delete quotes
+            msgstr = msgstr.substr(1, msgstr.length() - 2);
 
             if (msgstr.empty()) {
                 msgstr = tranlator.StartTranslate(msgid);
             }
 
-            output << "msgstr \"" << msgstr << "\"" << std::endl;
+            output << "msgstr \"" << msgstr << "\"\n";
             inMsgstr = true;
         }
         else {
-            output << line << std::endl;
+            output << line << "\n";
         }
     }
+
     std::cout << std::endl;
     input.close();
     output.close();
+
+    
+    if (overwriteOriginal) {
+        try {
+            std::filesystem::remove(sourceFile);
+            std::filesystem::rename(outputPath, sourceFile);
+            std::cout << "Original file replaced successfully.\n";
+        }
+        catch (std::exception& e) {
+            std::cerr << "Failed to replace original file: " << e.what() << std::endl;
+        }
+    }
 }
 
 void FindAllPO(const path& sourceDir) {
@@ -161,7 +163,7 @@ void FindAllPO(const path& sourceDir) {
 
     for (const auto& entry : recursive_directory_iterator(sourceDir)) {
         if (entry.is_regular_file() && entry.path().extension() == ".po") {
-            TranslatePO(entry.path(), sourceDir);
+            TranslatePO(entry.path(), sourceDir, overwriteOriginalFiles);
         }
     }
 }
