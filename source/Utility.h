@@ -17,4 +17,4 @@ void FindAllPO(const path& sourceDir);
 
 void GetAllMsgstrs(const path& sourceFile, std::vector<std::string>& msgstrs);
 
-const bool overwriteOriginalFiles = false;
+const bool overwriteOriginalFiles = true;

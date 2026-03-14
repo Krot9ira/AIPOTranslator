@@ -19,6 +19,6 @@ private:
 
     const std::string apiUrl = "http://localhost:11434/api/generate";
 
-    const std::string model = "qwen3:30b-instruct";
+    const std::string model = "qwen3.5:35b";
 
 };

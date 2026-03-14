@@ -30,13 +30,20 @@ std::string POTranslator::Translate(const std::string& text) {
     std::string readBuffer;
 
     std::ostringstream ossPrompt;
-    ossPrompt << "You are a professional game localizer.Please translate the following string from.po file to " << language << " while preserving the format, maintaining all special characters and formatting as required for a valid.po file entry. Do not output errors or explanations.";
+    ossPrompt << "You are a professional game localizer. "
+        << "Please translate the following string from a .po file to " << language << " "
+        << "while preserving the format, maintaining all special characters and formatting "
+        << "as required for a valid .po file entry. "
+        << "Do not translate or modify any text inside curly braces {like_this}; keep it exactly as it appears. "
+        << "Do not output errors or explanations.";
+
     std::string prompt = ossPrompt.str();
 
     prompt.append("'");
     prompt.append(text);
     prompt.append("'");
-    prompt.append(".Respond using ONLY JSON with the key 'msgstr' or 'translation' containing the translated text. ");
+    prompt.append(". Respond using ONLY JSON with the key 'msgstr' or 'translation' containing the translated text.");
+
 
 
     
