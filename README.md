@@ -21,15 +21,21 @@ cmake .. -G "Visual Studio 17 2022"
 Also you need curl. Below insturction for installing vcpkg and installing culr using it.
 
 1. Install vcpkg
-git clone https://github.com/microsoft/vcpkg.git
-cd vcpkg; 
-.\bootstrap-vcpkg.bat
+
+   git clone https://github.com/microsoft/vcpkg.git
+
+   cd vcpkg; 
+
+   .\bootstrap-vcpkg.bat
 
 2. Integrate with Visual Studio
+
    .\vcpkg integrate install
 
 3. Install cURL
-.\vcpkg install curl:x64-windows
+
+   .\vcpkg install curl:x64-windows
+
 ---
 
 ## ⚙️ Configuration
