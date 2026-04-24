@@ -1,4 +1,5 @@
 # AIPOTranslator
+<img width="1280" height="666" alt="image" src="https://github.com/user-attachments/assets/96c06d85-b2cd-4f04-8f00-609ed2c4bbb4" />
 
 **AIPOTranslator** is a tool for translating `.PO` files using AI models.  
 It has been tested with the `qwen3.6:35b` model running locally through [Ollama](https://ollama.com) on a system with:
