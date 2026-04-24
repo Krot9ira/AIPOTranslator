@@ -1,10 +1,11 @@
-//All rights reserved by Daniil Grigoriev.
+// All rights reserved by Daniil Grigoriev.
 
 #include "POTranlator.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <curl\curl.h>
+#include "Config/Config.h"
+#include <curl/curl.h>
 #include "Utility.h"
 #include "nlohmann\json.hpp"
 
@@ -15,53 +16,58 @@ using json = nlohmann::json;
 POTranslator::POTranslator(std::string language_)
 {
     language = language_;
+    config = loadConfig("config.json");
+    apiUrl = config.apiUrl;
+    model = config.model;
+    overwriteOriginalFiles = config.overwriteOriginalFiles;
     std::cout << "Start translating to " << language << " ..." << std::endl;
 }
 
-
 // Translate call
-std::string POTranslator::Translate(const std::string& text) {
-    if (text.empty()) {
+std::string POTranslator::Translate(const std::string &text)
+{
+    if (text.empty())
+    {
         // nothing to translate
         return "";
     }
-    CURL* curl;
+    CURL *curl;
     CURLcode res;
     std::string readBuffer;
 
     std::ostringstream ossPrompt;
-    ossPrompt << "You are a professional game localizer. "
-        << "Please translate the following string from a .po file to " << language << " "
-        << "while preserving the format, maintaining all special characters and formatting "
-        << "as required for a valid .po file entry. "
-        << "Do not translate or modify any text inside curly braces {like_this}; keep it exactly as it appears. "
-        << "Do not output errors or explanations.";
+    std::string promptTemplate = config.prompt;
 
-    std::string prompt = ossPrompt.str();
+    // Replace {language} placeholder with the actual language
+    size_t pos = promptTemplate.find("{language}");
+    while (pos != std::string::npos)
+    {
+        promptTemplate.replace(pos, std::string("{language}").length(), language);
+        pos = promptTemplate.find("{language}");
+    }
 
+    std::string prompt = promptTemplate;
     prompt.append("'");
     prompt.append(text);
     prompt.append("'");
     prompt.append(". Respond using ONLY JSON with the key 'msgstr' or 'translation' containing the translated text.");
 
-
-
-    
-	// We dont want stream because we just generating transltation and not chating with the model
+    // We dont want stream because we just generating transltation and not chating with the model
     bool stream = false;
-	//For now disabling think, as it will take more time to process the request and actiualy have no effect on the translation
+    // For now disabling think, as it will take more time to process the request and actiualy have no effect on the translation
     bool think = false;
 
     std::string format = "json";
 
     std::ostringstream ossBody;
-	// Constructing the JSON body for the request for more information go to Ollama API documentation
-    ossBody << "{\"model\": \"" << model << "\", \"prompt\": \"" << prompt << "\", \"think\": "<< (think ? "true" : "false") << ", \"stream\": " << (stream ? "true" : "false") << ", \"format\": \"" << format << "\", \"keep_alive\": \"5m\"}";
+    // Constructing the JSON body for the request for more information go to Ollama API documentation
+    ossBody << "{\"model\": \"" << model << "\", \"prompt\": \"" << prompt << "\", \"think\": " << (think ? "true" : "false") << ", \"stream\": " << (stream ? "true" : "false") << ", \"format\": \"" << format << "\", \"keep_alive\": \"5m\"}";
     std::string body = ossBody.str();
 
     // Requesting translate and check response for translation
     curl = curl_easy_init();
-    if (curl) {
+    if (curl)
+    {
 
         curl_easy_setopt(curl, CURLOPT_URL, apiUrl.c_str());
 
@@ -74,8 +80,8 @@ std::string POTranslator::Translate(const std::string& text) {
 
         res = curl_easy_perform(curl);
 
-
-        if (res != CURLE_OK) {
+        if (res != CURLE_OK)
+        {
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
             return "";
         }
@@ -84,19 +90,17 @@ std::string POTranslator::Translate(const std::string& text) {
         {
             response_json = json::parse(readBuffer);
         }
-        catch (const std::exception& ex)
+        catch (const std::exception &ex)
         {
             std::cerr << "Error while parsing: " << ex.what() << std::endl;
             curl_easy_cleanup(curl);
             throw ex;
         }
-        
-
 
         curl_easy_cleanup(curl);
 
-
-        if (response_json.contains("response")) {
+        if (response_json.contains("response"))
+        {
             std::string pojson = response_json["response"];
             try
             {
@@ -123,11 +127,12 @@ std::string POTranslator::Translate(const std::string& text) {
                     "value", "VALUE",
                     "data", "DATA",
                     "content", "CONTENT",
-                    "string"
-                };
+                    "string"};
 
-                for (const auto& key : translationKeys) {
-                    if (finalmgstr.contains(key)) {
+                for (const auto &key : translationKeys)
+                {
+                    if (finalmgstr.contains(key))
+                    {
                         std::string translatedText = finalmgstr[key];
 #if PRINT_EACH_LINE_TRANSLATION
                         std::cout << translatedText << "  ==  " << text << std::endl;
@@ -139,14 +144,14 @@ std::string POTranslator::Translate(const std::string& text) {
                 std::cerr << "No translated field. finalmgstr: " << finalmgstr << std::endl;
                 throw std::runtime_error("No translated field");
             }
-            catch (const std::exception& ex)
+            catch (const std::exception &ex)
             {
                 std::cerr << "Error while parsing: " << ex.what() << std::endl;
                 throw ex;
             }
-
         }
-        else {
+        else
+        {
             std::cerr << "No 'response' field" << std::endl;
             throw std::runtime_error("No 'response' field");
         }
@@ -155,7 +160,8 @@ std::string POTranslator::Translate(const std::string& text) {
     return "";
 }
 
-std::string POTranslator::StartTranslate(const std::string& input) {
+std::string POTranslator::StartTranslate(const std::string &input)
+{
     if (input.empty())
     {
         return input;
@@ -185,11 +191,12 @@ std::string POTranslator::StartTranslate(const std::string& input) {
 #endif
         return result;
     }
-    catch (const std::exception& ex)
+    catch (const std::exception &ex)
     {
-        std::cerr << "Exception while translating field: " << std::endl << input << std::endl << "will be empty" << std::endl << "Error:" << ex.what() << std::endl;
+        std::cerr << "Exception while translating field: " << std::endl
+                  << input << std::endl
+                  << "will be empty" << std::endl
+                  << "Error:" << ex.what() << std::endl;
         return "";
     }
 }
-
-

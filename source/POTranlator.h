@@ -1,8 +1,9 @@
-//All rights reserved by Daniil Grigoriev.
+// All rights reserved by Daniil Grigoriev.
 #pragma once
 
 #include <string>
 #include <vector>
+#include "Config/Config.h"
 
 class POTranslator
 {
@@ -10,15 +11,16 @@ public:
     POTranslator(std::string language_);
     ~POTranslator() {};
 
-    std::string StartTranslate(const std::string& input);
+    std::string StartTranslate(const std::string &input);
 
 private:
-	std::string language;
+    std::string language;
 
-    std::string Translate(const std::string& text);
+    std::string Translate(const std::string &text);
 
-    const std::string apiUrl = "http://localhost:11434/api/generate";
+    Config config;
 
-    const std::string model = "qwen3.5:35b";
-
+    std::string apiUrl;
+    std::string model;
+    bool overwriteOriginalFiles;
 };

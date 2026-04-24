@@ -1,49 +1,52 @@
 # AIPOTranslator
 
 **AIPOTranslator** is a tool for translating `.PO` files using AI models.  
-It has been tested with the `qwen3:30b-instruct` model running locally through [Ollama](https://ollama.com) on a system with:
+It has been tested with the `qwen3.6:35b` model running locally through [Ollama](https://ollama.com) on a system with:
 
 - GPU: RTX 3080 Ti (12 GB VRAM)  
 - RAM: 48 GB  
 
 ---
 
-## 🛠️ Building the Project with CMake and Visual Studio 2022
+## 🛠️ Building the Project with CMake and Visual Studio 2026
 
-To generate the project files, follow these steps:
+To run the project in vs2026, follow these steps:
 
+```
+Install vckpg https://learn.microsoft.com/ru-ru/vcpkg/get_started/get-started-vs?pivots=shell-powershell
+
+```
+Make file "CMakeUserPresets.json" where you can make your own cmake presets and importantly set path to your vcpkg
+
+example of file "CMakeUserPresets.json"
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "default",
+            "inherits": "vcpkg",
+            "environment": {
+                "VCPKG_ROOT": "E:/programming/vcpkg" //your path to vcpkg on your pc
+            }
+        }
+    ]
+}
 ```
 # Open Command Prompt and run:
 mkdir build
-cd build
-cmake .. -G "Visual Studio 17 2022"
+cmake --preset default
 ```
-Also you need curl. Below insturction for installing vcpkg and installing culr using it.
-
-1. Install vcpkg
-
-   git clone https://github.com/microsoft/vcpkg.git
-
-   cd vcpkg; 
-
-   .\bootstrap-vcpkg.bat
-
-2. Integrate with Visual Studio
-
-   .\vcpkg integrate install
-
-3. Install cURL
-
-   .\vcpkg install curl:x64-windows
-
+now you can open project folder in visual studio and it will work.
 ---
 
 ## ⚙️ Configuration
 
-You can change translation settings in `POTranslator.h`:
+You can change translation settings:
 
 - `apiUrl` — Default is `localhost`. Change it to your server's URL if needed.
 - `model` — Default is `qwen3:30b-instruct`. You can replace this with any compatible model name.
+- `propmpt` — Any "{language}" will be changed to name of folder in which file is located
+- `Overwrite Original Files` - If true will overwrite original files, if false will create new file in same folder with postfix: _Translated
 
 ---
 
@@ -86,7 +89,7 @@ In this case, `messages.po` in the `fr` folder will be translated to French, `es
 ## 💬 Notes
 
 - Make sure your model is running and accessible via the `apiUrl` before starting translation.
-- You can use any model compatible with your setup, not just `qwen3:30b-instruct`.
+- You can use any model compatible with your setup, not just `qwen3.6:35b`.
 
 ---
 

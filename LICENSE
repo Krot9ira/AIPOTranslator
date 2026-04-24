@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 Krot9ira
+Copyright (c) 2026 Krot9ira
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,3 +23,6 @@ SOFTWARE.
 
 This project includes code from:
 - [nlohmann/json](https://github.com/nlohmann/json), licensed under the MIT License.
+- [ocornut/imgui](https://github.com/ocornut/imgui), licensed under the MIT License.
+- [glfw/glfw](https://github.com/glfw/glfw), licensed under the zlib/libpng License.
+- [Dav1dde/glad](https://github.com/Dav1dde/glad), licensed under the MIT License.

@@ -1,0 +1,27 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "vcpkg",
+            "generator": "Visual Studio 18 2026",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "vcpkg",
+            "configuration": "Debug",
+            "jobs": 8
+        },
+        {
+            "name": "release",
+            "configurePreset": "vcpkg",
+            "configuration": "Release",
+            "jobs": 8
+        }
+    ]
+}
