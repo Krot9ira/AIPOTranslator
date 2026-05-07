@@ -29,6 +29,7 @@ set(IMGUI_SRC
     source/ThirdParty/imgui/imgui_widgets.cpp
     source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
     source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
+    source/ThirdParty/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
 # ImGuiManager

@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <Shlobj.h>
 #include <fstream>
 #include <filesystem>
@@ -148,9 +149,8 @@ void ImGuiManager::RenderSettingsTab()
     ImGui::Text("API URL:");
     ImGui::SameLine();
     ImGui::PushItemWidth(400);
-    if (ImGui::InputText("##APIUrl", currentConfig.apiUrl.data(), currentConfig.apiUrl.size() + 1, ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputText("##APIUrl", &currentConfig.apiUrl, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        // Note: This is a simplified version - in production, use proper string handling
         configChanged = true;
     }
     ImGui::PopItemWidth();
@@ -158,7 +158,7 @@ void ImGuiManager::RenderSettingsTab()
     ImGui::Text("Model:");
     ImGui::SameLine();
     ImGui::PushItemWidth(400);
-    if (ImGui::InputText("##Model", currentConfig.model.data(), currentConfig.model.size() + 1, ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputText("##Model", &currentConfig.model, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         configChanged = true;
     }
@@ -167,7 +167,7 @@ void ImGuiManager::RenderSettingsTab()
     ImGui::Text("Prompt:");
     ImGui::SameLine();
 	ImGui::PushItemWidth(400);
-    if (ImGui::InputTextMultiline("##Prompt", currentConfig.prompt.data(),currentConfig.prompt.capacity() + 1,ImVec2(-FLT_MIN, 150), ImGuiInputTextFlags_WordWrap))
+    if (ImGui::InputTextMultiline("##Prompt", &currentConfig.prompt, ImVec2(-FLT_MIN, 150), ImGuiInputTextFlags_WordWrap))
     {
         configChanged = true;
     }
