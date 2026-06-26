@@ -7,6 +7,7 @@ struct Config
     std::string model;
     std::string prompt;
     bool overwriteOriginalFiles = true;
+    bool translateInPlace = true;
 };
 
 Config getDefaultConfig();

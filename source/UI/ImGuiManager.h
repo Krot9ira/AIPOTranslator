@@ -27,6 +27,10 @@ public:
     void StartTranslation();
     void CancelTranslation();
 
+    // XLSX translation management
+    void SelectXLSXFile(const std::string &filePath);
+    void StartXLSXTranslation();
+
     // Progress tracking
     void SetTranslationProgress(size_t progress);
     void AddLogMessage(const std::string &message);
@@ -47,6 +51,7 @@ private:
 
     void RenderSettingsTab();
     void RenderTranslationTab();
+    void RenderXLSXTranslationTab();
     void RenderLogTab();
     void RenderAboutTab();
 
@@ -63,6 +68,7 @@ private:
     // Translation state
     std::vector<std::string> poFiles;
     std::string selectedFolderPath;
+    std::string selectedXLSXFile;
     size_t translationProgress;
     std::string currentTranslationFile;
     bool isTranslating;

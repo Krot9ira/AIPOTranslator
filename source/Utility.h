@@ -20,3 +20,7 @@ void FindAllPO(const path &sourceDir, bool overwriteOriginalFiles, const Progres
 void DiscoverPOFiles(const path &sourceDir, std::vector<std::string> &poFiles);
 
 void GetAllMsgstrs(const path &sourceFile, std::vector<std::string> &msgstrs);
+
+// ---- XLSX translation ----
+
+void TranslateXLSX(const path &sourceFile, bool translateInPlace, const ProgressCallback &progressCallback = nullptr, const bool &bCancelled = false);

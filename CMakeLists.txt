@@ -57,7 +57,11 @@ target_include_directories(core PUBLIC
 )
 #curl
 find_package(CURL REQUIRED)
-target_link_libraries(core PUBLIC CURL::libcurl)
+#xlnt
+find_package(xlnt CONFIG REQUIRED)
+#libzip (used to read the theme palette from .xlsx for cell-color detection)
+find_package(libzip CONFIG REQUIRED)
+target_link_libraries(core PUBLIC CURL::libcurl xlnt::xlnt libzip::zip)
 
 add_library(imgui ${IMGUI_SRC})
 

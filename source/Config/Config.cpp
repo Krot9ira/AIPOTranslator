@@ -16,6 +16,7 @@ Config getDefaultConfig()
         "as required for a valid .po file entry. "
         "Do not translate or modify any text inside curly braces {like_this}; keep it exactly as it appears. "
         "Do not output errors or explanations.",
+        true,
         true};
 }
 
@@ -41,7 +42,8 @@ Config loadConfig(const std::string &path)
                          "as required for a valid .po file entry. "
                          "Do not translate or modify any text inside curly braces {like_this}; keep it exactly as it appears. "
                          "Do not output errors or explanations."),
-        j.value("overwriteOriginalFiles", true)};
+        j.value("overwriteOriginalFiles", true),
+        j.value("translateInPlace", true)};
 }
 
 void saveConfig(const Config &config, const std::string &path)
@@ -51,6 +53,7 @@ void saveConfig(const Config &config, const std::string &path)
     j["model"] = config.model;
     j["prompt"] = config.prompt;
     j["overwriteOriginalFiles"] = config.overwriteOriginalFiles;
+    j["translateInPlace"] = config.translateInPlace;
 
     std::ofstream file(path);
     file << j.dump(4);

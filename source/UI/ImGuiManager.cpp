@@ -9,6 +9,8 @@
 #include <imgui_impl_opengl3.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <Shlobj.h>
+#include <commdlg.h>
+#pragma comment(lib, "comdlg32.lib")
 #include <fstream>
 #include <filesystem>
 #include <chrono>
@@ -116,9 +118,15 @@ void ImGuiManager::RenderMainWindow()
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Translation"))
+        if (ImGui::BeginTabItem(".POTranslation"))
         {
             RenderTranslationTab();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem(".XLSXTranslation"))
+        {
+            RenderXLSXTranslationTab();
             ImGui::EndTabItem();
         }
 
@@ -295,6 +303,79 @@ void ImGuiManager::RenderTranslationTab()
     }
 }
 
+void ImGuiManager::RenderXLSXTranslationTab()
+{
+    ImGui::SeparatorText("File Selection");
+
+    ImGui::PushItemWidth(400);
+    if (ImGui::Button("Select File", ImVec2(150, 0)))
+    {
+        // Open file picker dialog
+        wchar_t fileBuf[MAX_PATH] = {0};
+
+        OPENFILENAMEW ofn = {0};
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = NULL;
+        ofn.lpstrFilter = L"Excel files (*.xlsx)\0*.xlsx\0All files (*.*)\0*.*\0";
+        ofn.lpstrFile = fileBuf;
+        ofn.nMaxFile = MAX_PATH;
+        ofn.lpstrTitle = L"Select an XLSX file to translate";
+        ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+
+        if (GetOpenFileNameW(&ofn))
+        {
+            char charPath[MAX_PATH];
+            WideCharToMultiByte(CP_UTF8, 0, fileBuf, -1, charPath, MAX_PATH, NULL, NULL);
+            SelectXLSXFile(std::string(charPath));
+        }
+    }
+    ImGui::PopItemWidth();
+
+    if (!selectedXLSXFile.empty())
+    {
+        ImGui::Text("Selected: %s", selectedXLSXFile.c_str());
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::Checkbox("Translate in place (uncheck = copy sheet)", &currentConfig.translateInPlace))
+    {
+        configChanged = true;
+    }
+    ImGui::TextDisabled("Sheets are translated by name suffix, e.g. \"Items-RU\" -> RU. Sheets without \"-CODE\" are ignored.");
+
+    ImGui::Separator();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
+    if (ImGui::Button("Start Translation##xlsx", ImVec2(200, 0)))
+    {
+        StartXLSXTranslation();
+    }
+    ImGui::PopStyleColor();
+
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+    if (ImGui::Button("Cancel##xlsx", ImVec2(100, 0)))
+    {
+        CancelTranslation();
+    }
+    ImGui::PopStyleColor();
+
+    // Progress bar
+    if (isTranslating)
+    {
+        ImGui::Text("Progress: %zu%%", translationProgress);
+        ImGui::ProgressBar(static_cast<float>(translationProgress) / 100.0f, ImVec2(0, 0),
+                           (currentTranslationFile.empty() ? "Translating..." : (std::string("Translating: ") + currentTranslationFile).c_str()));
+    }
+    else if (translationProgress >= 100)
+    {
+        ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "Translation completed!");
+        translationProgress = 0;
+    }
+}
+
 void ImGuiManager::RenderLogTab()
 {
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 100);
@@ -336,11 +417,12 @@ void ImGuiManager::RenderAboutTab()
     ImGui::Text("AIPO Translator");
     ImGui::Separator();
     ImGui::Text("Version 1.0");
-    ImGui::Text("A GUI application for translating .po files using AI");
+    ImGui::Text("A GUI application for translating .po and .xlsx files using AI");
 
     ImGui::Separator();
     ImGui::Text("Features:");
-    ImGui::BulletText("Translate .po files using Ollama AI models");
+    ImGui::BulletText("Translate .po files using Ollama AI models (language from folder name)");
+    ImGui::BulletText("Translate .xlsx files (language from sheet suffix, e.g. Items-RU)");
     ImGui::BulletText("Support for multiple languages");
     ImGui::BulletText("Progress tracking and logging");
     ImGui::BulletText("Configurable API settings");
@@ -373,8 +455,7 @@ void ImGuiManager::UpdateTranslationProgress(size_t progress, const std::string 
     }
 
     translationProgress = progress;
-
-    
+    currentTranslationFile = currentFile;
 
     if (!isTranslationCancelled && translationProgress >= 100)
     {
@@ -396,6 +477,51 @@ void ImGuiManager::SelectFolder(const std::string &folderPath)
     {
         AddLogMessage(std::string("Error scanning folder: ") + ex.what());
     }
+}
+
+void ImGuiManager::SelectXLSXFile(const std::string &filePath)
+{
+    selectedXLSXFile = filePath;
+    AddLogMessage(std::string("Selected XLSX file: ") + filePath);
+}
+
+void ImGuiManager::StartXLSXTranslation()
+{
+    if (selectedXLSXFile.empty())
+    {
+        AddLogMessage("Error: No XLSX file selected. Please select a file first.");
+        return;
+    }
+
+    if (isTranslating)
+    {
+        AddLogMessage("Translation already in progress");
+        return;
+    }
+
+    isTranslating = true;
+    isTranslationCancelled = false;
+    translationProgress = 0;
+    currentTranslationFile.clear();
+
+    AddLogMessage("Starting XLSX translation of " + selectedXLSXFile);
+
+    bool translateInPlace = currentConfig.translateInPlace;
+    std::string file = selectedXLSXFile;
+
+    std::thread([this, translateInPlace, file]()
+                {
+        try
+        {
+            TranslateXLSX(std::filesystem::path(file), translateInPlace, [this](size_t progress, const std::string &currentFile) {UpdateTranslationProgress(progress, currentFile);}, isTranslationCancelled);
+        }
+        catch (const std::exception& ex)
+        {
+            AddLogMessage(std::string("Translation error: ") + ex.what());
+        }
+
+        isTranslating = false; })
+        .detach();
 }
 
 void ImGuiManager::StartTranslation()

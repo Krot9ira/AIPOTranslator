@@ -20,6 +20,10 @@
 
 int main()
 {
+    // Make the debug console render UTF-8 so non-English translations
+    // (Cyrillic, CJK, etc.) print correctly instead of garbled bytes.
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
 
     curl_global_init(CURL_GLOBAL_ALL);
 
