@@ -511,7 +511,7 @@ void TranslateXLSX(const path &sourceFile, bool translateInPlace, const Progress
 
         auto highestRow = targetWs.highest_row();
         auto highestCol = targetWs.highest_column();
-
+		bool sheetChange = false;
         for (xlnt::row_t row = 1; row <= highestRow && !bCancelled; ++row)
         {
             for (xlnt::column_t::index_t col = 1; col <= highestCol.index && !bCancelled; ++col)
@@ -564,9 +564,22 @@ void TranslateXLSX(const path &sourceFile, bool translateInPlace, const Progress
                 {
                     cell.value(translated);
                     anyChange = true;
+					sheetChange = true;
                     std::cout << cell.reference().to_string() << " [" << title << "]: "
                               << text << " -> " << translated << std::endl;
                 }
+            }
+        }
+        if (sheetChange)
+        {
+            try
+            {
+                wb.save(sourceFile.string());
+                std::cout << "Saved translated xlsx: " << sourceFile.string() << std::endl;
+            }
+            catch (const std::exception& ex)
+            {
+                std::cerr << "Failed to save xlsx '" << sourceFile.string() << "': " << ex.what() << std::endl;
             }
         }
     }
